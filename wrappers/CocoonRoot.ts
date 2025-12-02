@@ -156,6 +156,22 @@ export class CocoonRoot implements Contract {
         });
     }
 
+    async getData(provider: ContractProvider) {
+        const res = await provider.get('get_cocoon_data', []);
+        return {
+            version: res.stack.readNumber(),
+            lastProxySeqno: res.stack.readNumber(),
+            paramsVersion: res.stack.readNumber(),
+            uniqueId: res.stack.readNumber(),
+            isTest: res.stack.readNumber(),
+            pricePerToken: res.stack.readNumber(),
+            workerFeePerToken: res.stack.readBigNumber(),
+            minProxyStake: res.stack.readBigNumber(),
+            minClientStake: res.stack.readBigNumber(),
+            ownerAddress: res.stack.readAddress(),
+        };
+    }
+
     static addProxyTypeMessage(proxyHash: Buffer) {
       return beginCell()
           .storeUint(0x71860e80, 32)
@@ -556,5 +572,28 @@ export class CocoonRoot implements Contract {
         };
 
         return conf; 
+    }
+
+    async getCurParams(provider: ContractProvider) {
+        let res = await provider.get('get_cur_params', []);
+
+        const conf = {
+            paramsVersion: res.stack.readNumber(),
+            uniqueId: res.stack.readNumber(),
+            isTest: res.stack.readNumber(),
+            pricePerToken: res.stack.readBigNumber(),
+            workerFeePerToken: res.stack.readBigNumber(),
+            cachedTokensPriceMultiplier: res.stack.readNumber(),
+            reasoningTokensPriceMultiplier: res.stack.readNumber(),
+            proxyDelayBeforeClose: res.stack.readNumber(),
+            clientDelayBeforeClose: res.stack.readNumber(),
+            minProxyStake: res.stack.readBigNumber(),
+            minClientStake: res.stack.readBigNumber(),
+            proxyScHash: res.stack.readBigNumber(),
+            workerScHash: res.stack.readBigNumber(),
+            clientScHash: res.stack.readBigNumber(),
+        };
+
+        return conf;
     }
 }
