@@ -555,9 +555,9 @@ describe('CocoonRoot - Comprehensive', () => {
             expect(data.uniqueId).toBe(12345);
             expect(data.isTest).toBe(1);
             expect(data.pricePerToken).toBe(Number(toNano('0.001')));
-            expect(data.workerFeePerToken).toBe(Number(toNano('0.0001')));
-            expect(data.minProxyStake).toBe(Number(toNano('1.0')));
-            expect(data.minClientStake).toBe(Number(toNano('1.0')));
+            expect(data.workerFeePerToken).toBe(toNano('0.0001'));
+            expect(data.minProxyStake).toBe(toNano('1.0'));
+            expect(data.minClientStake).toBe(toNano('1.0'));
             expect(data.ownerAddress.toString()).toBe(deployer.address.toString());
         });
 
