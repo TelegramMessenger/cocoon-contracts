@@ -51,7 +51,7 @@ struct (0x5cfc6b87) ClientProxyTopUp {
 }
 
 struct (0xa35cb580) ClientProxyRegister {
-    // empty payload
+    nonce: uint64
 }
 
 struct (0xc68ebc7b) ClientProxyRefundGranted {

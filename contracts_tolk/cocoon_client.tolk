@@ -197,6 +197,7 @@ fun onInternalMessage(in: InMessage) {
                 storage,
                 msg.queryId,
                 ClientProxyRegister {
+                    nonce: msg.nonce
                 }.toCell(),
                 msg.sendExcessesTo
             );
