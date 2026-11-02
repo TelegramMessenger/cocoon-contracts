@@ -26,7 +26,7 @@ export async function run(provider: NetworkProvider) {
     const minClientStake : bigint = toNano(1.0);
 
     const params : CocoonParams = {
-      struct_version: 3,
+      struct_version: 4,
       params_version: 0,
       unique_id: uniqueId,
       is_test: isTest,
@@ -53,7 +53,13 @@ export async function run(provider: NetworkProvider) {
       worker_hashes: Dictionary.empty(null, null),
       model_hashes: Dictionary.empty(null, null),
       version: 0,
-      params: params
+      params: params,
+      // cocoon_root.fc reads struct version 4 only and expects the key manager cell
+      // (unpack_cocoon_root_data loads a third ref); without it every owner message fails with exit code 9.
+      public_keys: Dictionary.empty(),
+      key_manager_public_key: BigInt(0),
+      key_manager_image_hash: BigInt(0),
+      key_manager_net_addr: { addr: '' },
     };
 
     const cocoonRoot = provider.open(CocoonRoot.createFromConfig(conf, await compile('CocoonRoot')));
