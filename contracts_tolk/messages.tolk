@@ -201,6 +201,26 @@ struct (0xc4a1ae54) ChangeOwner {
     newOwnerAddress: address
 }
 
+struct (0xb01c0fe9) ChangeKeyManager {
+    queryId: uint64
+    newPublicKey: uint256
+    newImageHash: uint256
+    newNetAddr: RemainingBitsAndRefs  // type + len + addr
+}
+
+struct (0x6e5a646a) AddPublicKey {
+    queryId: uint64
+    publicKey: uint256
+    keyInfo: RemainingBitsAndRefs  // key type (uint8) + valid until (uint32), stored as is
+}
+
+// Payload of a SignedMessage with op 0x9e0e1821, signed by the key manager
+struct (0x9e0e1821) AddPublicKeySignedPayload {
+    queryId: uint64
+    publicKey: uint256
+    keyInfo: RemainingBitsAndRefs  // key type (uint8) + valid until (uint32), stored as is
+}
+
 // === Worker Messages ===
 
 struct (0x26ed7f65) OwnerWorkerRegister {
