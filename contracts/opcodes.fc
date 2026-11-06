@@ -37,6 +37,9 @@ const int op::client_proxy_register = 0xa35cb580;
 const int op::client_proxy_refund_granted = 0xc68ebc7b;
 const int op::client_proxy_refund_force = 0xf4c354c9;
 
+;; proxy to client
+const int op::proxy_client_refund_shortfall = 0x42c95b27;
+
 ;; proxy control
 const int op::ext_proxy_increase_stake = 0x9713f187;
 const int op::ext_proxy_payout_request = 0x7610e6eb;

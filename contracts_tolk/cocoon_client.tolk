@@ -28,6 +28,7 @@ type ClientMessage =
     | OwnerClientIncreaseStake
     | OwnerClientWithdraw
     | OwnerClientRequestRefund
+    | ProxyClientRefundShortfall
 
 // === Helper Functions ===
 
@@ -294,6 +295,15 @@ fun onInternalMessage(in: InMessage) {
                     }.toCell()
                 );
             }
+        },
+
+        ProxyClientRefundShortfall => {
+            // Forced close paid less than the balance because the proxy stake was too small;
+            // keep the remainder so that a signed refund grant can still return it
+            assert (in.senderAddress == constData.proxyAddress) throw ERROR_CONTRACT_ADDRESS_MISMATCH;
+            assert (storage.state == client_state_closed) throw ERROR_NOT_UNLOCKED_YET;
+
+            storage.balance = storage.balance + msg.coins;
         }
     }
 

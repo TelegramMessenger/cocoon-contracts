@@ -314,6 +314,18 @@
 
     forward_refund_granted(proxy_address, query_id, owner_address, state, balance, stake, tokens_used, secret_hash, to_refund, send_excesses_to);
 
+  } elseif (op == op::proxy_client_refund_shortfall) {
+
+    ;; forced close paid less than the balance because the proxy stake was too small;
+    ;; keep the remainder so that a signed refund grant can still return it
+    int shortfall = in_msg_body~load_coins();
+    in_msg_body.end_parse();
+
+    throw_unless(error::contract_address_mismatch, equal_slices_bits(sender_address, proxy_address));
+    throw_unless(error::not_unlocked_yet, state == client_state_closed);
+
+    balance += shortfall;
+
   } else {
 
     throw (error::unknown_op);

@@ -183,6 +183,20 @@ fun ProxyStorage.handleClientProxyRequest(mutate self, msg: ClientProxyRequest, 
             reserveToncoinsOnBalance(toLeaveOnBalance - coinsToRefund, 0);
             sendPayout(msg.ownerAddress, coinsToRefund, msg.queryId, SEND_MODE_PAY_FEES_SEPARATELY);
 
+            // The part not covered by the stake stays recoverable via a signed refund grant
+            val shortfall = innerMsg.coins - coinsToRefund;
+            if (shortfall > 0) {
+                createMessage({
+                    bounce: BounceMode.Only256BitsOfBody,
+                    dest: senderAddress,
+                    value: STORAGE_ESTIMATE,
+                    body: ProxyClientRefundShortfall {
+                        queryId: msg.queryId,
+                        coins: shortfall
+                    }
+                }).send(SEND_MODE_PAY_FEES_SEPARATELY);
+            }
+
             sendExcesses(innerMsg.sendExcessesTo, msg.queryId);
         }
     }
