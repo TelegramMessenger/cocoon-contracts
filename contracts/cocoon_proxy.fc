@@ -320,12 +320,15 @@
       throw_unless(error::expected_message_from_owner, equal_slices_bits(sender_address, owner_address));
 
       raw_reserve(to_leave_on_balance - balance, 0);
-      balance = 0;
 
+      ;; same as ext_proxy_payout_request: pay the balance, then return the rest of the message value;
+      ;; carrying all balance here left nothing for the excesses message and aborted the action phase
       builder msg = create_msg(NON_BOUNCEABLE, owner_address, balance)
             .store_uint(op::payout, 32) ;; op
             .store_uint(query_id, 64); ;; query_id
-      send_raw_message(msg.end_cell(), SEND_MODE_CARRY_ALL_BALANCE);
+      send_raw_message(msg.end_cell(), SEND_MODE_PAY_FEES_SEPARETELY);
+
+      balance = 0;
 
       forward_excesses(sender_address, query_id);
 

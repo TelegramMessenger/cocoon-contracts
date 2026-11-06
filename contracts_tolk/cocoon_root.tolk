@@ -25,6 +25,8 @@ type RootMessage =
     | ResetRoot
     | UpgradeFull
     | ChangeOwner
+    | ChangeKeyManager
+    | AddPublicKey
 
 // === Helper Functions ===
 
@@ -36,6 +38,29 @@ fun validateProxyAddr(addr: slice) {
     val addrLen = tempAddr.loadUint(7);
     tempAddr.skipBits(addrLen * 8);
     tempAddr.assertEnd();
+}
+
+// Registers a public key (value = key type + valid until) and drops every expired key, as in FunC.
+fun PublicKeysManagerData.addKey(mutate self, publicKey: int, keyInfo: slice) {
+    var info = keyInfo;
+    info.skipBits(8);  // key type
+    val expireAt = info.loadUint(32);
+    info.assertEnd();
+    assert (expireAt >= blockchain.now()) throw ERROR_OLD_MESSAGE;
+
+    self.publicKeys.uDictSet(256, publicKey, keyInfo);
+
+    var (key, value, found) = self.publicKeys.uDictGetFirst(256);
+    while (found) {
+        var cs = value!;
+        cs.skipBits(8);
+        val validUntil = cs.loadUint(32);
+        val current = key!;
+        (key, value, found) = self.publicKeys.uDictGetNext(256, current);
+        if (validUntil < blockchain.now()) {
+            self.publicKeys.uDictDelete(256, current);
+        }
+    }
 }
 
 // === Message Handler ===
@@ -60,6 +85,21 @@ fun onInternalMessage(in: InMessage) {
 
     var storage = lazy RootStorage.load();
     val ownerAddress = storage.ownerAddress;
+
+    // The only operation not from the owner: a public key signed by the key manager
+    if (op == OP_ROOT_ADD_PUBLIC_KEY_SIGNED) {
+        var keys = storage.publicKeysManagerData.load();
+        val signedMsg = SignedMessage.fromSlice(in.body);
+        signedMsg.verify(keys.managerPublicKey);
+        val payload = AddPublicKeySignedPayload.fromCell(signedMsg.signedDataCell);
+        keys.addKey(payload.publicKey, payload.keyInfo);
+
+        sendExcesses(signedMsg.sendExcessesTo, signedMsg.queryId);
+        storage.publicKeysManagerData = keys.toCell();
+        storage.version = storage.version + 1;
+        storage.save();
+        return;
+    }
 
     // Only owner can perform operations
     assert (in.senderAddress == storage.ownerAddress) throw ERROR_EXPECTED_MESSAGE_FROM_OWNER;
@@ -166,6 +206,21 @@ fun onInternalMessage(in: InMessage) {
         
         ChangeOwner => {
             storage.ownerAddress = msg.newOwnerAddress;
+        },
+
+        ChangeKeyManager => {
+            validateProxyAddr(msg.newNetAddr);
+            var keys = storage.publicKeysManagerData.load();
+            keys.managerPublicKey = msg.newPublicKey;
+            keys.managerImageHash = msg.newImageHash;
+            keys.managerNetAddr = msg.newNetAddr;
+            storage.publicKeysManagerData = keys.toCell();
+        },
+
+        AddPublicKey => {
+            var keys = storage.publicKeysManagerData.load();
+            keys.addKey(msg.publicKey, msg.keyInfo);
+            storage.publicKeysManagerData = keys.toCell();
         }
     }
 
@@ -245,5 +300,12 @@ get fun model_hash_is_valid(hash: int): int {
     var storage = RootStorage.load();
     var data = storage.data.load();
     val (_, found) = data.modelHashes.uDictGet(256, hash);
+    return found ? -1 : 0;
+}
+
+get fun public_key_is_valid(hash: int): int {
+    var storage = RootStorage.load();
+    var keys = storage.publicKeysManagerData.load();
+    val (_, found) = keys.publicKeys.uDictGet(256, hash);
     return found ? -1 : 0;
 }
