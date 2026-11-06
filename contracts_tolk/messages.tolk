@@ -64,6 +64,13 @@ struct (0xf4c354c9) ClientProxyRefundForce {
     sendExcessesTo: address
 }
 
+// Sent by the proxy when a forced refund could not be covered by its stake.
+// The client keeps the unpaid part so that a signed refund grant can still return it.
+struct (0x42c95b27) ProxyClientRefundShortfall {
+    queryId: uint64
+    coins: coins
+}
+
 // === Signed Message Structures ===
 
 // Common header inside all signed data

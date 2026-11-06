@@ -210,6 +210,7 @@
       ;; if proxy didn't do it, it will lose (part of) its stake
       ;; unfortunatly we can't allow to pay the whole sum back
       ;; but client is garanteed not to lose more than it's stake
+      int requested = coins;
       if (state != proxy_state_closed) {
         if (coins > stake) {
           coins = stake;
@@ -223,6 +224,17 @@
             .store_uint(op::payout, 32) ;; op
             .store_uint(query_id, 64); ;; query_id
       send_raw_message(msg.end_cell(), SEND_MODE_PAY_FEES_SEPARETELY);
+
+      ;; the part not covered by the stake stays recoverable:
+      ;; the client records it and accepts a later signed refund grant for it
+      int shortfall = requested - coins;
+      if (shortfall > 0) {
+        builder notice = create_msg(BOUNCEABLE, sender_address, STORAGE_ESTIMATE)
+              .store_uint(op::proxy_client_refund_shortfall, 32)
+              .store_uint(query_id, 64)
+              .store_coins(shortfall);
+        send_raw_message(notice.end_cell(), SEND_MODE_PAY_FEES_SEPARETELY);
+      }
 
       forward_excesses(send_excesses_to, query_id);
 
