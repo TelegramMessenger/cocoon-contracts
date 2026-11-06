@@ -185,6 +185,7 @@ fun onInternalMessage(in: InMessage) {
 
         UpgradeCode => {
             contract.setCodePostponed(msg.newCode);
+            sendExcesses(ownerAddress, queryId);  // as in FunC root_upgrade
             return;  // Don't save storage when upgrading code
         },
 

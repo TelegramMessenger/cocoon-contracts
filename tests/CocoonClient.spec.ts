@@ -280,6 +280,30 @@ describe('CocoonClient', () => {
             });
         });
 
+        it('should pass the nonce to the proxy (read by the proxy runner)', async () => {
+            const result = await cocoonClient.sendOwnerRegister(
+                owner.getSender(),
+                toNano('0.15'),
+                123n,
+                owner.address
+            );
+
+            const tx = result.transactions.find(
+                (t) => t.inMessage?.info.dest?.toString() === proxy.address.toString() &&
+                       t.inMessage?.info.src?.toString() === cocoonClient.address.toString()
+            );
+            expect(tx).toBeDefined();
+            const body = tx!.inMessage!.body.beginParse();
+            expect(body.loadUint(32)).toBe(0x65448ff4); // client_proxy_request
+            body.loadUint(64);                        // query_id
+            body.loadAddress();                       // client owner
+            body.loadRef();                           // client state
+            expect(body.loadBit()).toBe(true);        // has payload
+            const payload = body.loadRef().beginParse();
+            expect(payload.loadUint(32)).toBe(0xa35cb580); // client_proxy_register
+            expect(payload.loadUintBig(64)).toBe(123n);    // nonce
+        });
+
         it('should reject from non-owner', async () => {
             const result = await cocoonClient.sendOwnerRegister(
                 deployer.getSender(),
