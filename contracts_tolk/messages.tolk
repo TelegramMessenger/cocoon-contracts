@@ -51,7 +51,7 @@ struct (0x5cfc6b87) ClientProxyTopUp {
 }
 
 struct (0xa35cb580) ClientProxyRegister {
-    // empty payload
+    nonce: uint64  // read by the proxy runner (ProxyContract::on_transaction), as in FunC forward_register
 }
 
 struct (0xc68ebc7b) ClientProxyRefundGranted {
@@ -199,6 +199,26 @@ struct (0x4f7c5789) UpgradeFull {
 struct (0xc4a1ae54) ChangeOwner {
     queryId: uint64
     newOwnerAddress: address
+}
+
+struct (0xb01c0fe9) ChangeKeyManager {
+    queryId: uint64
+    newPublicKey: uint256
+    newImageHash: uint256
+    newNetAddr: RemainingBitsAndRefs  // type + len + addr
+}
+
+struct (0x6e5a646a) AddPublicKey {
+    queryId: uint64
+    publicKey: uint256
+    keyInfo: RemainingBitsAndRefs  // key type (uint8) + valid until (uint32), stored as is
+}
+
+// Payload of a SignedMessage with op 0x9e0e1821, signed by the key manager
+struct (0x9e0e1821) AddPublicKeySignedPayload {
+    queryId: uint64
+    publicKey: uint256
+    keyInfo: RemainingBitsAndRefs  // key type (uint8) + valid until (uint32), stored as is
 }
 
 // === Worker Messages ===

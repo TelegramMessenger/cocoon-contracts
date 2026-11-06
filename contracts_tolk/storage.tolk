@@ -79,11 +79,21 @@ struct RootData {
     modelHashes: dict
 }
 
+// Key manager and the public keys it registered (same layout as pack_cocoon_public_keys_manager_data in FunC):
+// value of each key = key type (uint8) + valid until (uint32).
+struct PublicKeysManagerData {
+    publicKeys: dict
+    managerPublicKey: uint256
+    managerImageHash: uint256
+    managerNetAddr: RemainingBitsAndRefs  // type + len + addr
+}
+
 struct RootStorage {
     ownerAddress: address
     version: uint32
     data: Cell<RootData>
     params: Cell<CocoonParams>
+    publicKeysManagerData: Cell<PublicKeysManagerData>
 }
 
 fun RootStorage.load() {

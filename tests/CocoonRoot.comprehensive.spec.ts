@@ -430,6 +430,12 @@ describe('CocoonRoot - Comprehensive', () => {
                 to: cocoonRoot.address,
                 success: true,
             });
+            // like every other owner operation, the rest of the message value comes back
+            expect(result.transactions).toHaveTransaction({
+                from: cocoonRoot.address,
+                to: deployer.address,
+                op: TestConstants.OP_EXCESSES,
+            });
         });
 
         it('should reject upgrade code from non-owner', async () => {
